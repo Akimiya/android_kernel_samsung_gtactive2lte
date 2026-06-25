@@ -249,8 +249,17 @@ SUBARCH := $(shell uname -m | sed -e s/i.86/x86/ -e s/x86_64/x86/ \
 # Default value for CROSS_COMPILE is not to prefix executables
 # Note: Some architectures assign CROSS_COMPILE in their arch/*/Makefile
 export KBUILD_BUILDHOST := $(SUBARCH)
-ARCH		?=arm64
-CROSS_COMPILE	?=../PLATFORM/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin/aarch64-linux-android-
+# just in case we hardassign, as we have 64 kernel and 32 userspace
+#ARCH		?=arm64
+ARCH = arm64
+# We are sticking to what worked in the old kernel for now
+CROSS_COMPILE   ?= aarch64-linux-android-
+#CROSS_COMPILE	?=../PLATFORM/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin/aarch64-linux-android-
+
+# fixing issue where aarch64-linux-androidkernel-gcc can't be found
+export PATH := $(PWD)/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin:$(PATH)
+# just in case, use binaries that are compiled instead of other ones, I think normally that should happen automatically..
+export PATH := $(PWD)/out/host/linux-x86/bin/:$(PATH)
 
 # Architecture as present in compile.h
 UTS_MACHINE 	:= $(ARCH)
@@ -296,8 +305,12 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 	  else if [ -x /bin/bash ]; then echo /bin/bash; \
 	  else echo sh; fi ; fi)
 
-HOSTCC       = gcc
-HOSTCXX      = g++
+# we need to compile it with an older host gcc, should likely work between GCC 4 and GCC 7.5; originally just gcc/g++
+# here we using the local GCC 7.5, rename to what might be right in the path or try the prebuilts
+HOSTCC       = gcc-7
+HOSTCXX      = g++-7
+#HOSTCC       = $(PWD)/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.15-4.8/bin/x86_64-linux-gcc
+#HOSTCXX      = $(PWD)/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.15-4.8/bin/x86_64-linux-g++
 HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fomit-frame-pointer -std=gnu89
 HOSTCXXFLAGS = -O2
 
@@ -365,7 +378,9 @@ OBJDUMP		= $(CROSS_COMPILE)objdump
 AWK		= awk
 GENKSYMS	= scripts/genksyms/genksyms
 INSTALLKERNEL  := installkernel
-DEPMOD		= /sbin/depmod
+# MOST ANNOYING FUNCTIONAL BUG! why are we using system depmod if we could use a local one, just avoiding all the issues of it writing to /usr/lib instead of just /lib...
+#DEPMOD		= /sbin/depmod
+DEPMOD		= $(PWD)/out/host/linux-x86/bin/depmod
 PERL		= perl
 PYTHON		= python
 CHECK		= sparse

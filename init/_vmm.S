@@ -19,7 +19,8 @@
 
 #include <linux/vmm.h>
 
-#define vmm_ELF_PATH "init/vmm.elf"
+/* we use same relative path that we added in older version; might not be needed */
+#define vmm_ELF_PATH "../init/vmm.elf"
 
 #define SMC_64BIT_RET_MAGIC 0xC2000401
 
