@@ -260,6 +260,8 @@ CROSS_COMPILE   ?= aarch64-linux-android-
 export PATH := $(PWD)/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin:$(PATH)
 # just in case, use binaries that are compiled instead of other ones, I think normally that should happen automatically..
 export PATH := $(PWD)/out/host/linux-x86/bin/:$(PATH)
+# bad assumption that this is being passed from the device config..
+PLATFORM_VERSION := 9
 
 # Architecture as present in compile.h
 UTS_MACHINE 	:= $(ARCH)
@@ -438,6 +440,10 @@ KBUILD_LDFLAGS_MODULE := -T $(srctree)/scripts/module-common.lds
 KERNELRELEASE = $(shell cat include/config/kernel.release 2> /dev/null)
 KERNELVERSION = $(VERSION)$(if $(PATCHLEVEL),.$(PATCHLEVEL)$(if $(SUBLEVEL),.$(SUBLEVEL)))$(EXTRAVERSION)
 
+$(info KERNELVERSION=$(KERNELVERSION))
+$(info KERNELRELEASE=$(KERNELRELEASE))
+#$(error FAIL!)
+
 export VERSION PATCHLEVEL SUBLEVEL KERNELRELEASE KERNELVERSION
 export ARCH SRCARCH CONFIG_SHELL HOSTCC HOSTCFLAGS CROSS_COMPILE AS LD CC
 export CPP AR NM STRIP OBJCOPY OBJDUMP
@@ -508,6 +514,14 @@ else
 export ANDROID_VERSION=990000
 KBUILD_CFLAGS += -DANDROID_VERSION=990000
 endif
+
+#$(info PLATFORM_VERSION=$(PLATFORM_VERSION))
+#$(info PLATFORM_VERSION_NUMBER=$(PLATFORM_VERSION_NUMBER))
+$(info MAJOR_VERSION=$(MAJOR_VERSION))
+#$(info ANDROID_MAJOR_VERSION=$(ANDROID_MAJOR_VERSION))
+$(info ANDROID_VERSION=$(ANDROID_VERSION))
+#$(error FAIL!)
+
 PHONY += replace_dirs
 replace_dirs:
 ifneq ($(PLATFORM_VERSION), )
@@ -605,14 +619,19 @@ libs-y		:= lib/
 core-y		:= usr/
 endif # KBUILD_EXTMOD
 
+$(info Makefile HERE! dot-config=$(dot-config))
+
 ifeq ($(dot-config),1)
 # Read in config
 -include include/config/auto.conf
+
+$(info Read in config; KBUILD_EXTMOD=$(KBUILD_EXTMOD))
 
 ifeq ($(KBUILD_EXTMOD),)
 # Read in dependencies to all Kconfig* files, make sure to run
 # oldconfig if changes are detected.
 -include include/config/auto.conf.cmd
+$(info INSIDE KBUILD_EXTMOD=$(KBUILD_EXTMOD))
 
 # To avoid any implicit rule to kick in, define an empty command
 $(KCONFIG_CONFIG) include/config/auto.conf.cmd: ;
@@ -621,9 +640,20 @@ $(KCONFIG_CONFIG) include/config/auto.conf.cmd: ;
 # with it and forgot to run make oldconfig.
 # if auto.conf.cmd is missing then we are probably in a cleaned tree so
 # we execute the config step to be sure to catch updated Kconfig files
+$(info BEFORE LAST INCLUDE)
 include/config/%.conf: $(KCONFIG_CONFIG) include/config/auto.conf.cmd
+	@echo "==== BUILDING $@ ===="
+	@echo "PWD=$(PWD)"
+	@echo "O=$(O)"
+	@echo "srctree=$(srctree)"
+	@echo "ARCH=$(ARCH)"
+	@echo "$(Q)$(MAKE) -f $(srctree)/Makefile silentoldconfig"
 	$(Q)$(MAKE) -f $(srctree)/Makefile silentoldconfig
+
+$(info LAST LINE)
 else
+
+$(info ELSE of KBUILD_EXTMOD=$(KBUILD_EXTMOD))
 # external modules needs include/generated/autoconf.h and include/config/auto.conf
 # but do not care if they are up-to-date. Use auto.conf to trigger the test
 PHONY += include/config/auto.conf
@@ -640,6 +670,7 @@ include/config/auto.conf:
 endif # KBUILD_EXTMOD
 
 else
+$(info ELSE of dot-config=$(dot-config))
 # Dummy target needed, because used as prerequisite
 include/config/auto.conf: ;
 endif # $(dot-config)
