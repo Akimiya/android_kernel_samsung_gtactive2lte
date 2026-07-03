@@ -1,8 +1,8 @@
 VERSION = 3
 PATCHLEVEL = 18
 SUBLEVEL = 91
-EXTRAVERSION =
-NAME = Diseased Newt
+EXTRAVERSION = 1
+NAME = Diseased Kernel
 
 # *DOCUMENTATION*
 # To see a list of typical targets execute "make help"
@@ -260,8 +260,11 @@ CROSS_COMPILE   ?= aarch64-linux-android-
 export PATH := $(PWD)/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin:$(PATH)
 # just in case, use binaries that are compiled instead of other ones, I think normally that should happen automatically..
 export PATH := $(PWD)/out/host/linux-x86/bin/:$(PATH)
-# bad assumption that this is being passed from the device config..
-PLATFORM_VERSION := 9
+
+# bad assumption that this is being passed from the device config.. A7 worked eithout it
+# the A7 kernel never defined it and the error is from missing MAJOR_VERSION for kernel/samsung/gtactive2lte/fs/sdcardfs/ subfolder selection
+# removed subfolders and adjusted layout to be similar to A7 to have less converging makefile paths...
+#PLATFORM_VERSION := 9
 
 # Architecture as present in compile.h
 UTS_MACHINE 	:= $(ARCH)
@@ -515,10 +518,10 @@ export ANDROID_VERSION=990000
 KBUILD_CFLAGS += -DANDROID_VERSION=990000
 endif
 
-#$(info PLATFORM_VERSION=$(PLATFORM_VERSION))
-#$(info PLATFORM_VERSION_NUMBER=$(PLATFORM_VERSION_NUMBER))
+$(info PLATFORM_VERSION=$(PLATFORM_VERSION))
+$(info PLATFORM_VERSION_NUMBER=$(PLATFORM_VERSION_NUMBER))
 $(info MAJOR_VERSION=$(MAJOR_VERSION))
-#$(info ANDROID_MAJOR_VERSION=$(ANDROID_MAJOR_VERSION))
+$(info ANDROID_MAJOR_VERSION=$(ANDROID_MAJOR_VERSION))
 $(info ANDROID_VERSION=$(ANDROID_VERSION))
 #$(error FAIL!)
 
@@ -642,6 +645,7 @@ $(KCONFIG_CONFIG) include/config/auto.conf.cmd: ;
 # we execute the config step to be sure to catch updated Kconfig files
 $(info BEFORE LAST INCLUDE)
 include/config/%.conf: $(KCONFIG_CONFIG) include/config/auto.conf.cmd
+	@echo "HERE!!"
 	@echo "==== BUILDING $@ ===="
 	@echo "PWD=$(PWD)"
 	@echo "O=$(O)"
