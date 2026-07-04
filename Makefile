@@ -264,7 +264,7 @@ export PATH := $(PWD)/out/host/linux-x86/bin/:$(PATH)
 # bad assumption that this is being passed from the device config.. A7 worked eithout it
 # the A7 kernel never defined it and the error is from missing MAJOR_VERSION for kernel/samsung/gtactive2lte/fs/sdcardfs/ subfolder selection
 # removed subfolders and adjusted layout to be similar to A7 to have less converging makefile paths...
-#PLATFORM_VERSION := 9
+PLATFORM_VERSION := 9
 
 # Architecture as present in compile.h
 UTS_MACHINE 	:= $(ARCH)

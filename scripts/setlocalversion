@@ -140,7 +140,6 @@ if $scm_only; then
 	exit
 fi
 
-echo "HERE! PWD=$(pwd)"
 if test -e include/config/auto.conf; then
 	. include/config/auto.conf
 else
