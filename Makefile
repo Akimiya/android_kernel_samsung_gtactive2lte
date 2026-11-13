@@ -261,7 +261,7 @@ export PATH := $(PWD)/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/
 # just in case, use binaries that are compiled instead of other ones, I think normally that should happen automatically..
 export PATH := $(PWD)/out/host/linux-x86/bin/:$(PATH)
 
-# bad assumption that this is being passed from the device config.. A7 worked eithout it
+# bad assumption that this is being passed from the device config.. A7 worked without it
 # the A7 kernel never defined it and the error is from missing MAJOR_VERSION for kernel/samsung/gtactive2lte/fs/sdcardfs/ subfolder selection
 # removed subfolders and adjusted layout to be similar to A7 to have less converging makefile paths...
 PLATFORM_VERSION := 9
@@ -310,7 +310,7 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 	  else if [ -x /bin/bash ]; then echo /bin/bash; \
 	  else echo sh; fi ; fi)
 
-# we need to compile it with an older host gcc, should likely work between GCC 4 and GCC 7.5; originally just gcc/g++
+# we need to compile it with an older host gcc, should likely work between GCC 4 and GCC 7.5; originally it used plain gcc/g++
 # here we using the local GCC 7.5, rename to what might be right in the path or try the prebuilts
 HOSTCC       = gcc-7
 HOSTCXX      = g++-7
@@ -443,10 +443,6 @@ KBUILD_LDFLAGS_MODULE := -T $(srctree)/scripts/module-common.lds
 KERNELRELEASE = $(shell cat include/config/kernel.release 2> /dev/null)
 KERNELVERSION = $(VERSION)$(if $(PATCHLEVEL),.$(PATCHLEVEL)$(if $(SUBLEVEL),.$(SUBLEVEL)))$(EXTRAVERSION)
 
-$(info KERNELVERSION=$(KERNELVERSION))
-$(info KERNELRELEASE=$(KERNELRELEASE))
-#$(error FAIL!)
-
 export VERSION PATCHLEVEL SUBLEVEL KERNELRELEASE KERNELVERSION
 export ARCH SRCARCH CONFIG_SHELL HOSTCC HOSTCFLAGS CROSS_COMPILE AS LD CC
 export CPP AR NM STRIP OBJCOPY OBJDUMP
@@ -517,14 +513,6 @@ else
 export ANDROID_VERSION=990000
 KBUILD_CFLAGS += -DANDROID_VERSION=990000
 endif
-
-$(info PLATFORM_VERSION=$(PLATFORM_VERSION))
-$(info PLATFORM_VERSION_NUMBER=$(PLATFORM_VERSION_NUMBER))
-$(info MAJOR_VERSION=$(MAJOR_VERSION))
-$(info ANDROID_MAJOR_VERSION=$(ANDROID_MAJOR_VERSION))
-$(info ANDROID_VERSION=$(ANDROID_VERSION))
-#$(error FAIL!)
-
 PHONY += replace_dirs
 replace_dirs:
 ifneq ($(PLATFORM_VERSION), )
@@ -622,19 +610,14 @@ libs-y		:= lib/
 core-y		:= usr/
 endif # KBUILD_EXTMOD
 
-$(info Makefile HERE! dot-config=$(dot-config))
-
 ifeq ($(dot-config),1)
 # Read in config
 -include include/config/auto.conf
-
-$(info Read in config; KBUILD_EXTMOD=$(KBUILD_EXTMOD))
 
 ifeq ($(KBUILD_EXTMOD),)
 # Read in dependencies to all Kconfig* files, make sure to run
 # oldconfig if changes are detected.
 -include include/config/auto.conf.cmd
-$(info INSIDE KBUILD_EXTMOD=$(KBUILD_EXTMOD))
 
 # To avoid any implicit rule to kick in, define an empty command
 $(KCONFIG_CONFIG) include/config/auto.conf.cmd: ;
@@ -643,21 +626,9 @@ $(KCONFIG_CONFIG) include/config/auto.conf.cmd: ;
 # with it and forgot to run make oldconfig.
 # if auto.conf.cmd is missing then we are probably in a cleaned tree so
 # we execute the config step to be sure to catch updated Kconfig files
-$(info BEFORE LAST INCLUDE)
 include/config/%.conf: $(KCONFIG_CONFIG) include/config/auto.conf.cmd
-	@echo "HERE!!"
-	@echo "==== BUILDING $@ ===="
-	@echo "PWD=$(PWD)"
-	@echo "O=$(O)"
-	@echo "srctree=$(srctree)"
-	@echo "ARCH=$(ARCH)"
-	@echo "$(Q)$(MAKE) -f $(srctree)/Makefile silentoldconfig"
 	$(Q)$(MAKE) -f $(srctree)/Makefile silentoldconfig
-
-$(info LAST LINE)
 else
-
-$(info ELSE of KBUILD_EXTMOD=$(KBUILD_EXTMOD))
 # external modules needs include/generated/autoconf.h and include/config/auto.conf
 # but do not care if they are up-to-date. Use auto.conf to trigger the test
 PHONY += include/config/auto.conf
@@ -674,7 +645,6 @@ include/config/auto.conf:
 endif # KBUILD_EXTMOD
 
 else
-$(info ELSE of dot-config=$(dot-config))
 # Dummy target needed, because used as prerequisite
 include/config/auto.conf: ;
 endif # $(dot-config)
